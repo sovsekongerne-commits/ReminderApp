@@ -5,6 +5,9 @@ kts = p.exists()
 if not kts:
     p = pathlib.Path('android/app/build.gradle')
 t = p.read_text()
+# permission_handler kræver compileSdk 37
+t = re.sub(r'compileSdk\s*=\s*flutter\.compileSdkVersion', 'compileSdk = 37', t)
+t = re.sub(r'compileSdkVersion\s+flutter\.compileSdkVersion', 'compileSdkVersion 37', t)
 # flutter_local_notifications kræver minSdk 24 og desugaring
 t = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 24', t)
 t = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 24', t)
