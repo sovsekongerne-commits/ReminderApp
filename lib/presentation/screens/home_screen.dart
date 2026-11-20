@@ -236,14 +236,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ref.read(remindersProvider.notifier).updateReminder(reminder);
             _toast('Ændringer gemt');
           } else {
-            ref.read(remindersProvider.notifier).addReminder(reminder);
+            ref
+                .read(remindersProvider.notifier)
+                .addReminder(reminder)
+                .then((_) => _checkPermissions());
             final names = reminder.placeIds
                 .map((id) =>
                     ref.read(placesProvider.notifier).getPlaceById(id)?.name)
                 .whereType<String>()
                 .join(' og ');
             _toast('Gemt – du får besked ved $names 🌸');
-            Future.delayed(const Duration(seconds: 2), _checkPermissions);
           }
         },
       ),

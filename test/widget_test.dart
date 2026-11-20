@@ -32,6 +32,20 @@ Future<void> _createNote(WidgetTester tester, String title,
   await tester.pumpAndSettle();
 }
 
+Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    250,
+    scrollable: find
+        .descendant(
+          of: find.byType(CustomScrollView),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -76,6 +90,7 @@ void main() {
     await tester.tap(find.text('Mælk'));
     await tester.pumpAndSettle();
     // Sidste punkt krydset af → engangs-sedlen flyttes til udførte
+    await _scrollTo(tester, find.textContaining('Udførte (1)'));
     expect(find.textContaining('Udførte (1)'), findsOneWidget);
   });
 
@@ -88,6 +103,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Husk paraply'), findsNothing);
+    await _scrollTo(tester, find.textContaining('Udførte (1)'));
     expect(find.textContaining('Udførte (1)'), findsOneWidget);
   });
 
