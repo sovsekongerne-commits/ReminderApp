@@ -80,7 +80,7 @@ class _CreateReminderSheetState extends ConsumerState<CreateReminderSheet> {
       ];
       final pre = widget.preselectedPlaceId ??
           (_places.isNotEmpty ? _places.first.id : null);
-      _placeIds = {if (pre != null) pre};
+      _placeIds = {?pre};
     }
     _titleController.addListener(() => setState(() {}));
     _itemController.addListener(() => setState(() {}));
@@ -486,11 +486,12 @@ class _CreateReminderSheetState extends ConsumerState<CreateReminderSheet> {
                 const SizedBox(height: AppSpacing.lg),
 
                 // TID + FAST
-                Container(
-                  decoration: BoxDecoration(
-                    color: surface,
+                Material(
+                  color: surface,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
                     borderRadius: AppRadius.roundedLg,
-                    border: Border.all(color: border),
+                    side: BorderSide(color: border),
                   ),
                   child: Column(
                     children: [

@@ -291,7 +291,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
                               ? Image.network(r.imagePath!, fit: BoxFit.cover)
                               : Image.file(File(r.imagePath!),
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
+                                  errorBuilder: (context, error, stack) =>
                                       const SizedBox()),
                         ),
                       ),

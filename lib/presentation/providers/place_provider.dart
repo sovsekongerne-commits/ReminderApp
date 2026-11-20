@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/mock/mock_places.dart';
@@ -31,7 +33,7 @@ class PlacesNotifier extends Notifier<List<Place>> {
   Future<void> _load() async {
     final places = await ref.read(placeRepositoryProvider).getPlaces();
     state = places;
-    await _sync();
+    unawaited(_sync());
   }
 
   Future<void> _sync() async {
@@ -53,7 +55,7 @@ class PlacesNotifier extends Notifier<List<Place>> {
           ]
         : [...state, place];
     await ref.read(placeRepositoryProvider).savePlace(place);
-    await _sync();
+    unawaited(_sync());
   }
 
   /// Sletter stedet. Sedler der kun hører til stedet slettes også;
@@ -63,9 +65,10 @@ class PlacesNotifier extends Notifier<List<Place>> {
     state = state.where((p) => p.id != id).toList();
     await ref.read(placeRepositoryProvider).deletePlace(id);
     await ref.read(remindersProvider.notifier).removePlace(id);
-    try {
-      await ref.read(geofenceServiceProvider).unregisterGeofence(id);
-    } catch (_) {}
+    unawaited(ref
+        .read(geofenceServiceProvider)
+        .unregisterGeofence(id)
+        .catchError((_) {}));
   }
 
   Place? getPlaceById(String? id) {

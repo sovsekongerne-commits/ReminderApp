@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/item_history_repository.dart';
@@ -31,7 +33,8 @@ class RemindersNotifier extends Notifier<List<Reminder>> {
   Future<void> reload() async {
     final repo = ref.read(reminderRepositoryProvider);
     state = await repo.getReminders();
-    await _syncGeofences();
+    // Overvågning af steder sker i baggrunden – må aldrig blokere listen
+    unawaited(_syncGeofences());
   }
 
   Reminder? byId(String id) {
@@ -44,7 +47,7 @@ class RemindersNotifier extends Notifier<List<Reminder>> {
   Future<void> _commit(List<Reminder> next) async {
     state = next;
     await ref.read(reminderRepositoryProvider).saveAll(next);
-    await _syncGeofences();
+    unawaited(_syncGeofences());
   }
 
   Future<void> _syncGeofences() async {
@@ -60,11 +63,13 @@ class RemindersNotifier extends Notifier<List<Reminder>> {
   Future<void> addReminder(Reminder reminder) async {
     await _ready;
     await _commit([reminder, ...state]);
-    try {
-      await NativeNotificationService().requestPermission();
-      await NativeLocationService().requestBackgroundPermission();
-    } catch (_) {}
-    await _syncGeofences();
+    unawaited(() async {
+      try {
+        await NativeNotificationService().requestPermission();
+        await NativeLocationService().requestBackgroundPermission();
+      } catch (_) {}
+      await _syncGeofences();
+    }());
   }
 
   Future<void> updateReminder(Reminder reminder) async {
