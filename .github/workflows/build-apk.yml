@@ -1,0 +1,61 @@
+name: Byg APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter-version
+        run: flutter --version
+
+      - name: Lav Android-projektet
+        run: |
+          flutter create --platforms=android --org com.minimal.location_reminder --project-name location_reminder .
+          cp android_overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          python3 android_overrides/patch_gradle.py
+
+      - name: Hent pakker
+        run: flutter pub get
+
+      - name: Tjek koden
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Kør tests
+        run: flutter test
+
+      - name: Byg APK
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk sted-og-paamindelse.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sted-og-paamindelse
+          path: sted-og-paamindelse.apk
+
+      - name: Læg APK under Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Sted & Påmindelse – build ${{ github.run_number }}
+          body: Hent `sted-og-paamindelse.apk` herunder og åbn den på telefonen.
+          files: sted-og-paamindelse.apk
