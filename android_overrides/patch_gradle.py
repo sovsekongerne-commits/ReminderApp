@@ -18,5 +18,10 @@ if 'CoreLibraryDesugaring' not in t and 'coreLibraryDesugaringEnabled' not in t:
     else:
         t = t.replace('compileOptions {', 'compileOptions {\n        coreLibraryDesugaringEnabled true', 1)
         t += "\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n}\n"
+# Ingen kodekrympning (R8) – den kan fjerne klasser, som plugins bruger
+if kts and 'isMinifyEnabled' not in t:
+    t = t.replace('release {', 'release {\n            isMinifyEnabled = false\n            isShrinkResources = false', 1)
+elif not kts and 'minifyEnabled' not in t:
+    t = t.replace('release {', 'release {\n            minifyEnabled false\n            shrinkResources false', 1)
 p.write_text(t)
 print(t)

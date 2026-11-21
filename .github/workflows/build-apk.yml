@@ -32,6 +32,10 @@ jobs:
           flutter create --platforms=android --org com.minimal.location_reminder --project-name location_reminder .
           cp android_overrides/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           python3 android_overrides/patch_gradle.py
+          K=android/app/src/main/kotlin/com/minimal/location_reminder/location_reminder
+          mkdir -p $K
+          cp android_overrides/kotlin/*.kt $K/
+          ls $K
 
       - name: Hent pakker
         run: flutter pub get

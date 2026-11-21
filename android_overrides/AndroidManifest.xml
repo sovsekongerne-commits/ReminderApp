@@ -12,7 +12,7 @@
 
     <application
         android:label="Sted &amp; Påmindelse"
-        android:name="${applicationName}"
+        android:name=".CrashApp"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
