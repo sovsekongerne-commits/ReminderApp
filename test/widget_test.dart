@@ -120,6 +120,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Vælger man ét sted, står der hvor den ellers hører til
+    await tester.ensureVisible(find.text('Arbejde').first);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Arbejde').first);
     await tester.pumpAndSettle();
     expect(find.text('Pant flasker'), findsOneWidget);
