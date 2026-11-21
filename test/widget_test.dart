@@ -115,6 +115,10 @@ void main() {
     expect(find.text('Pant flasker'), findsOneWidget);
     expect(find.text('HJEM · ARBEJDE'), findsOneWidget);
 
+    // Vent til bekræftelsen nederst er væk, så stedvalget kan nås
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
     // Vælger man ét sted, står der hvor den ellers hører til
     await tester.tap(find.text('Arbejde').first);
     await tester.pumpAndSettle();
