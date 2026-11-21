@@ -420,7 +420,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (filterPlace != null) {
       groups.add((
         icon: filterPlace.icon,
-        title: 'NÅR DU KOMMER TIL ${filterPlace.name.toUpperCase()}',
+        title: filterPlace.name.toUpperCase(),
         placeIds: [filterPlace.id],
         notes: active.where((r) => r.isAt(filterPlace.id)).toList(),
       ));
@@ -448,8 +448,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ];
         groups.add((
           icon: ps.map((p) => p.icon).join(' '),
-          title:
-              'NÅR DU KOMMER TIL ${ps.map((p) => p.name.toUpperCase()).join(' ELLER ')}',
+          title: ps.map((p) => p.name.toUpperCase()).join(' · '),
           placeIds: ps.map((p) => p.id).toList(),
           notes: byKey[key]!,
         ));
@@ -649,7 +648,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                       ],
                       if (orphans.isNotEmpty) ...[
-                        groupHeader('📍', 'MANGLER ET STED – TRYK FOR AT VÆLGE'),
+                        groupHeader('📍', 'MANGLER ET STED'),
                         for (final r in orphans) card(r, null),
                       ],
 

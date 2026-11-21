@@ -71,7 +71,7 @@ void main() {
     await _createNote(tester, 'Husk cykelhjelm');
 
     expect(find.text('Husk cykelhjelm'), findsOneWidget);
-    expect(find.text('NÅR DU KOMMER TIL HJEM'), findsOneWidget);
+    expect(find.text('HJEM'), findsOneWidget);
   });
 
   testWidgets('Tilføj punkt direkte på kortet og kryds det af',
@@ -113,7 +113,7 @@ void main() {
 
     // Under "Alle" står sedlen kun én gang, under et samlet afsnit
     expect(find.text('Pant flasker'), findsOneWidget);
-    expect(find.text('NÅR DU KOMMER TIL HJEM ELLER ARBEJDE'), findsOneWidget);
+    expect(find.text('HJEM · ARBEJDE'), findsOneWidget);
 
     // Vælger man ét sted, står der hvor den ellers hører til
     await tester.tap(find.text('Arbejde').first);

@@ -429,7 +429,7 @@ class _CreateReminderSheetState extends ConsumerState<CreateReminderSheet> {
                 const SizedBox(height: AppSpacing.lg),
 
                 // HVOR
-                sectionLabel('NÅR JEG KOMMER TIL', hint: 'vælg et eller flere'),
+                sectionLabel('STEDER', hint: 'vælg et eller flere'),
                 Wrap(
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
