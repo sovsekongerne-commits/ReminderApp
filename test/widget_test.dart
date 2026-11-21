@@ -111,8 +111,14 @@ void main() {
     await _startApp(tester);
     await _createNote(tester, 'Pant flasker', extraPlaces: ['Arbejde']);
 
-    expect(find.text('Pant flasker'), findsNWidgets(2));
-    expect(find.text('Også ved Arbejde'), findsOneWidget);
+    // Under "Alle" står sedlen kun én gang, under et samlet afsnit
+    expect(find.text('Pant flasker'), findsOneWidget);
+    expect(find.text('NÅR DU KOMMER TIL HJEM ELLER ARBEJDE'), findsOneWidget);
+
+    // Vælger man ét sted, står der hvor den ellers hører til
+    await tester.tap(find.text('Arbejde').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Pant flasker'), findsOneWidget);
     expect(find.text('Også ved Hjem'), findsOneWidget);
   });
 

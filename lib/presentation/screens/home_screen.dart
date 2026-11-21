@@ -190,11 +190,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
   }
 
-  Future<void> _openStore(String placeId) async {
+  Future<void> _openStore(
+    String placeId, {
+    List<String>? reminderIds,
+    String? title,
+  }) async {
     final place = ref.read(placesProvider.notifier).getPlaceById(placeId);
     if (place == null) return;
     final msg = await Navigator.of(context).push<String?>(
-      MaterialPageRoute(builder: (_) => StoreModeScreen(placeId: placeId)),
+      MaterialPageRoute(
+        builder: (_) => StoreModeScreen(
+          placeId: placeId,
+          reminderIds: reminderIds,
+          title: title,
+        ),
+      ),
     );
     if (msg != null) _toast(msg);
   }
@@ -397,13 +407,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       for (final p in places) p.id: active.where((r) => r.isAt(p.id)).length,
     };
 
-    // Grupper: ét afsnit pr. sted. En seddel med flere steder står under hvert.
-    final shownPlaces = filterPlace == null ? places : [filterPlace];
-    final groups = [
-      for (final p in shownPlaces)
-        (place: p, notes: active.where((r) => r.isAt(p.id)).toList()),
-    ].where((g) => g.notes.isNotEmpty || filterPlace != null).toList();
+    // Grupper. Under "Alle" står hver seddel kun ÉN gang: en seddel med
+    // flere steder får et samlet afsnit ("Netto eller Rema 1000").
+    // Når man har valgt ét sted, vises alt, der hører til det sted.
     final knownIds = places.map((p) => p.id).toSet();
+    final groups = <({
+      String icon,
+      String title,
+      List<String> placeIds,
+      List<Reminder> notes,
+    })>[];
+    if (filterPlace != null) {
+      groups.add((
+        icon: filterPlace.icon,
+        title: 'NÅR DU KOMMER TIL ${filterPlace.name.toUpperCase()}',
+        placeIds: [filterPlace.id],
+        notes: active.where((r) => r.isAt(filterPlace.id)).toList(),
+      ));
+    } else {
+      final byKey = <String, List<Reminder>>{};
+      for (final r in active) {
+        final ids = [
+          for (final p in places)
+            if (r.isAt(p.id)) p.id,
+        ];
+        if (ids.isEmpty) continue;
+        byKey.putIfAbsent(ids.join('|'), () => []).add(r);
+      }
+      // Rækkefølge: efter første sted i bjælken, enkelt-steder før kombinationer
+      int rank(String key) {
+        final ids = key.split('|');
+        return places.indexWhere((p) => p.id == ids.first) * 100 + ids.length;
+      }
+
+      final keys = byKey.keys.toList()..sort((a, b) => rank(a).compareTo(rank(b)));
+      for (final key in keys) {
+        final ps = [
+          for (final id in key.split('|'))
+            places.firstWhere((p) => p.id == id),
+        ];
+        groups.add((
+          icon: ps.map((p) => p.icon).join(' '),
+          title:
+              'NÅR DU KOMMER TIL ${ps.map((p) => p.name.toUpperCase()).join(' ELLER ')}',
+          placeIds: ps.map((p) => p.id).toList(),
+          notes: byKey[key]!,
+        ));
+      }
+    }
     final orphans = filterPlace != null
         ? <Reminder>[]
         : active.where((r) => !r.placeIds.any(knownIds.contains)).toList();
@@ -418,7 +469,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           key: ValueKey('card_${r.id}_$groupId'),
           reminder: r,
           groupPlaceId: groupId,
-          otherPlaceNames: otherNames(r, groupId),
+          // "Også ved …" giver kun mening, når man ser ét bestemt sted
+          otherPlaceNames:
+              filterPlace == null ? const [] : otherNames(r, groupId),
           onComplete: () => _complete(r),
           onDelete: () => _delete(r),
           onEdit: () => _openSheet(existing: r),
@@ -570,17 +623,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         ),
                       for (final g in groups) ...[
                         groupHeader(
-                          g.place.icon,
-                          'NÅR DU KOMMER TIL ${g.place.name.toUpperCase()}',
+                          g.icon,
+                          g.title,
                           onOpen: g.notes.isEmpty
                               ? null
-                              : () => _openStore(g.place.id),
+                              : () => g.placeIds.length == 1
+                                  ? _openStore(g.placeIds.first)
+                                  : _openStore(
+                                      g.placeIds.first,
+                                      reminderIds:
+                                          g.notes.map((r) => r.id).toList(),
+                                      title: g.placeIds
+                                          .map((id) => places
+                                              .firstWhere((p) => p.id == id)
+                                              .name)
+                                          .join(' eller '),
+                                    ),
                         ),
-                        for (final r in g.notes) card(r, g.place.id),
+                        for (final r in g.notes) card(r, g.placeIds.first),
                         if (g.notes.isEmpty)
                           EmptyRemindersView(
                             isFiltered: true,
-                            onAddTap: () => _openSheet(placeId: g.place.id),
+                            onAddTap: () =>
+                                _openSheet(placeId: g.placeIds.first),
                           ),
                       ],
                       if (orphans.isNotEmpty) ...[

@@ -150,13 +150,19 @@ class RemindersNotifier extends Notifier<List<Reminder>> {
   }
 
   /// Når butikstilstand lukkes: lister hvor alt er krydset af, afsluttes.
-  Future<bool> finishAt(String placeId) async {
+  Future<bool> finishAt(String placeId) => finishReminders([
+        for (final r in state)
+          if (r.isAt(placeId)) r.id,
+      ]);
+
+  /// Afslutter de af [ids], hvor alle punkter er krydset af.
+  Future<bool> finishReminders(List<String> ids) async {
     await _ready;
     final now = DateTime.now();
     var any = false;
     final next = [
       for (final r in state)
-        if (!r.isCompleted && r.isAt(placeId) && r.allItemsDone)
+        if (!r.isCompleted && ids.contains(r.id) && r.allItemsDone)
           () {
             any = true;
             return ReminderRules.complete(r, now);

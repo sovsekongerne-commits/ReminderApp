@@ -8,6 +8,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/day_palette.dart';
 import '../../core/utils/haptics.dart';
+import '../../domain/models/reminder.dart';
 import '../providers/place_provider.dart';
 import '../providers/reminder_provider.dart';
 
@@ -18,7 +19,22 @@ import '../providers/reminder_provider.dart';
 class StoreModeScreen extends ConsumerStatefulWidget {
   final String placeId;
 
-  const StoreModeScreen({super.key, required this.placeId});
+  /// Vis kun disse sedler (bruges for sedler med flere steder).
+  final List<String>? reminderIds;
+
+  /// Overskrift i stedet for stedets navn.
+  final String? title;
+
+  const StoreModeScreen({
+    super.key,
+    required this.placeId,
+    this.reminderIds,
+    this.title,
+  });
+
+  bool shows(Reminder r) =>
+      !r.isCompleted &&
+      (reminderIds == null ? r.isAt(placeId) : reminderIds!.contains(r.id));
 
   @override
   ConsumerState<StoreModeScreen> createState() => _StoreModeScreenState();
@@ -41,12 +57,12 @@ class _StoreModeScreenState extends ConsumerState<StoreModeScreen> {
 
   Future<void> _finish() async {
     final reminders = ref.read(remindersProvider);
-    final notes = reminders
-        .where((r) => !r.isCompleted && r.isAt(widget.placeId))
-        .toList();
+    final notes = reminders.where(widget.shows).toList();
     final anyRecurringDone = notes.any((r) => r.isRecurring && r.allItemsDone);
     final anyOneOffDone = notes.any((r) => !r.isRecurring && r.allItemsDone);
-    await ref.read(remindersProvider.notifier).finishAt(widget.placeId);
+    await ref
+        .read(remindersProvider.notifier)
+        .finishReminders(notes.map((r) => r.id).toList());
     if (!mounted) return;
     String? msg;
     if (anyOneOffDone) {
@@ -65,7 +81,7 @@ class _StoreModeScreenState extends ConsumerState<StoreModeScreen> {
         (ps) => ps.where((p) => p.id == widget.placeId).firstOrNull));
     final notes = ref
         .watch(remindersProvider)
-        .where((r) => !r.isCompleted && r.isAt(widget.placeId))
+        .where(widget.shows)
         .toList();
 
     final textPrimary =
@@ -124,7 +140,7 @@ class _StoreModeScreenState extends ConsumerState<StoreModeScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                place?.name ?? '',
+                                widget.title ?? place?.name ?? '',
                                 style: AppTypography.headline.copyWith(
                                     color: textPrimary, fontSize: 26),
                                 overflow: TextOverflow.ellipsis,
